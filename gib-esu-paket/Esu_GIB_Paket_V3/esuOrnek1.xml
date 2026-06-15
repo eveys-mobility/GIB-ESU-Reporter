@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<earsiv:eArsivRaporu xmlns:xerces="http://xerces.apache.org"
+ xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"
+ xmlns="http://www.w3.org/2000/09/xmldsig#"
+ xmlns:earsiv="http://earsiv.efatura.gov.tr"
+ xmlns:xades141="http://uri.etsi.org/01903/v1.4.1#"
+ xmlns:ns1="http://zraporu.efatura.gov.tr"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://earsiv.efatura.gov.tr file:/C:/Users/51850742664/Desktop/okc%20projeler/OKC-E%C5%9E%C3%9C/EsuRapor.xsd">
+    <earsiv:baslik>
+        <earsiv:versiyon>1.0</earsiv:versiyon>
+        <earsiv:mukellef>
+            <earsiv:vkn>1111111111</earsiv:vkn>
+<!--            <earsiv:tckn>43256458107</earsiv:tckn>-->
+        </earsiv:mukellef>
+        <earsiv:hazirlayan>
+            <earsiv:vkn>1111111112</earsiv:vkn>
+<!--            <earsiv:tckn>37187555593</earsiv:tckn>-->
+        </earsiv:hazirlayan>
+        <earsiv:raporNo>Bca3b8DA-aaAd-7f54-31E3-ceDAab82C268</earsiv:raporNo>
+        <!-- Aylık raporlarda gönderim şekli aşağıdaki gibidir.-->
+        <earsiv:donemBaslangicTarihi>2024-06-01</earsiv:donemBaslangicTarihi>
+        <earsiv:donemBitisTarihi>2024-06-30</earsiv:donemBitisTarihi>
+        <earsiv:bolumBaslangicTarihi>2024-06-01</earsiv:bolumBaslangicTarihi>
+        <earsiv:bolumBitisTarihi>2024-06-30</earsiv:bolumBitisTarihi>
+        <!-- zorunlu 1 gönderilecek -->
+        <earsiv:bolumNo>1</earsiv:bolumNo>
+        <!-- İmza bölümü. -->
+        <Signature Id="ID001">
+            <SignedInfo Id="ID003">
+                <CanonicalizationMethod Algorithm="http://HVPxplUB/">
+                </CanonicalizationMethod>
+                <SignatureMethod Algorithm="http://FsiYIVmU/">
+                    <HMACOutputLength>-240247096</HMACOutputLength>
+                </SignatureMethod>
+                <Reference Id="ID005" URI="http://qidvcEja/" Type="http://lFxNBiXx/">
+                    <Transforms>
+                        <Transform Algorithm="http://aCVboEyA/">
+<!--                            <XPath>FZzBsx8B21hijeFar3</XPath>-->
+<!--                            <XPath>Nhf</XPath>-->
+<!--                            <XPath>p77CLr1cBzx6Ei2wXZzOiee8lLQvQ</XPath>-->
+                        </Transform>
+                        <Transform Algorithm="http://hBUgDqSP/">
+<!--                            <XPath>qnknFIEF6wnQcPv</XPath>-->
+<!--                            <XPath>HYXQWzcPTMv6No_CjWD0KZHUEaE</XPath>-->
+<!--                            <XPath>T15V5FplVRx.-UX7_X409JOb</XPath>-->
+                        </Transform>
+                        <Transform Algorithm="http://pErLRkEr/">
+<!--                            <XPath>aZnehIr_db_f</XPath>-->
+<!--                            <XPath>RaHkvo-TWLl06inR8XePoU</XPath>-->
+<!--                            <XPath>qSDJyHZCkdx.hY51eSnDJCf4.kM2V1</XPath>-->
+                        </Transform>
+                    </Transforms>
+                    <DigestMethod Algorithm="http://ergcChBO/">
+                    </DigestMethod>
+                    <DigestValue>7369897178756777</DigestValue>
+                </Reference>
+                <Reference Id="ID007" URI="http://wXdlOXTq/" Type="http://SbssmYCj/">
+                    <Transforms>
+                        <Transform Algorithm="http://VnjPBXoi/">
+<!--                            <XPath>DuN8Bd</XPath>-->
+<!--                            <XPath>NEvE</XPath>-->
+<!--                            <XPath>WzRVb1zQYWZctzQ5a2iC3Y67zM.H</XPath>-->
+                        </Transform>
+                        <Transform Algorithm="http://dmWqRdqM/">
+<!--                            <XPath>MRyTe4Q2ga9a</XPath>-->
+<!--                            <XPath>cDczLszzdCDPwC2zZff</XPath>-->
+<!--                            <XPath>VS18Ik3S</XPath>-->
+                        </Transform>
+                        <Transform Algorithm="http://FKDBIMom/">
+<!--                            <XPath>f7Kywyt_F4t6X8w</XPath>-->
+<!--                            <XPath>FegC2XcYjmwsqMm07fG2QUm0S</XPath>-->
+<!--                            <XPath>D9UmZxsaN8O</XPath>-->
+                        </Transform>
+                    </Transforms>
+                    <DigestMethod Algorithm="http://jElechtH/">
+                    </DigestMethod>
+                    <DigestValue>82758567747270808371706680908779677669777276796865758875696679817281868973907968</DigestValue>
+                </Reference>
+                <Reference Id="ID009" URI="http://TdfQhhgL/" Type="http://zIRVGVvs/">
+                    <Transforms>
+                        <Transform Algorithm="http://Jycsswpy/">
+<!--                            <XPath>Imkz8ksP_VnSmp</XPath>-->
+<!--                            <XPath>sl03aoSN-bMmLO</XPath>-->
+<!--                            <XPath>Dz5b2BJ9M5</XPath>-->
+                        </Transform>
+                        <Transform Algorithm="http://EdtxZUoH/">
+<!--                            <XPath>j3FVsPzoQ4z</XPath>-->
+<!--                            <XPath>uxIl7oAYK9DqZHH_XD</XPath>-->
+<!--                            <XPath>bGCbvvOLpIW0_</XPath>-->
+                        </Transform>
+                        <Transform Algorithm="http://guKeWWPU/">
+<!--                            <XPath>bF9LnUWHnjYmaQfbVLo.E</XPath>-->
+<!--                            <XPath>fFBAnqlXOFKMG8f5mnWP_4ZV1G</XPath>-->
+<!--                            <XPath>LoE0Tgm9</XPath>-->
+                        </Transform>
+                    </Transforms>
+                    <DigestMethod Algorithm="http://lQfCzenM/">
+                    </DigestMethod>
+                    <DigestValue>7281898689847579798170747067869074877167719065766575808774878975</DigestValue>
+                </Reference>
+            </SignedInfo>
+            <SignatureValue Id="ID011">687387786778878087877082676870778382757379828372726870877478846590708965798386788267868290657871796588836886856885726580</SignatureValue>
+            <KeyInfo Id="ID013">
+                <KeyName>vy.QInI86q2JpA2b6WBuRq14K</KeyName>
+                <KeyName>TsI4d7KxStOVEs4UNOIFItxNozdGyC</KeyName>
+                <KeyName>m</KeyName>
+            </KeyInfo>
+            <Object Id="ID043" MimeType="p5ZzuQwUAXyfOeV0-F8.euX" Encoding="http://CkuZqvRZ/">
+            </Object>
+            <Object Id="ID045" MimeType="I7jrk5I6uJXXwB" Encoding="http://bNceIfFG/">
+            </Object>
+            <Object Id="ID047" MimeType="O7yMpvp4-HaAjul" Encoding="http://BPtvugIc/">
+            </Object>
+        </Signature>
+    </earsiv:baslik>
+    <earsiv:esuRapor>
+        <!-- Esu Rapor TEKİL ID -->
+        <earsiv:UUID>Ba3aFD34-AD3e-0E63-5F3F-53B49EBa898a</earsiv:UUID>
+        <earsiv:plakaNo>06GIB19</earsiv:plakaNo>
+        <!-- hizmet türü ve miktarı -->
+        <earsiv:hizmetMiktari unitCode="kw/h">100</earsiv:hizmetMiktari>
+        <earsiv:toplamTutar>1971.61</earsiv:toplamTutar>
+        <earsiv:paraBirimi>TRY</earsiv:paraBirimi>
+        <!-- zorunlu değil -->
+        <earsiv:aracKimlikNo>nW5d1hw</earsiv:aracKimlikNo>
+        <!-- hizmet roaming ise zorunlu -->
+        <earsiv:roamingHizmeti>
+            <earsiv:vkn>1111111111</earsiv:vkn>
+            <earsiv:unvan>GİB</earsiv:unvan>
+        </earsiv:roamingHizmeti>
+    </earsiv:esuRapor>
+    <!-- Tek pakette birden fazla rapor gönderilebilir. -->
+    <earsiv:esuRapor>
+        <!-- Esu Rapor TEKİL ID -->
+        <earsiv:UUID>Fa4bFD34-AD3e-0E63-5F3F-53B49EBa898a</earsiv:UUID>
+        <earsiv:plakaNo>06GIB19</earsiv:plakaNo>
+        <!-- hizmet türü ve miktarı -->
+        <earsiv:hizmetMiktari unitCode="kw/h">200</earsiv:hizmetMiktari>
+        <earsiv:toplamTutar>2971.61</earsiv:toplamTutar>
+        <earsiv:paraBirimi>TRY</earsiv:paraBirimi>
+        <!-- zorunlu değil -->
+        <earsiv:aracKimlikNo>n5wagSw</earsiv:aracKimlikNo>
+        <!-- hizmet roaming ise zorunlu -->
+        <earsiv:roamingHizmeti>
+            <earsiv:vkn>1111111111</earsiv:vkn>
+            <earsiv:unvan>GİB</earsiv:unvan>
+        </earsiv:roamingHizmeti>
+    </earsiv:esuRapor>
+</earsiv:eArsivRaporu>

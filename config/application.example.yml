@@ -1,0 +1,32 @@
+company:
+  vkn: "XXXXXXXXXX"
+  unvan: "ORNEK SARJ AGI ISLETMECISI A.S."
+  epdkLisansNo: "SH/00000-0/00000"
+
+report:
+  xsdPath: "gib-esu-paket/Esu_GIB_Paket_V3/esuRapor.xsd"
+  namespaceUri: "http://earsiv.efatura.gov.tr"
+  decimalScale: 2
+
+excel:
+  sheetName: ""
+  headerRow: 1
+  plateColumn: ""
+  kwhColumn: ""
+  amountColumn: ""
+
+signing:
+  # GİB test/prod kabulü genellikle SIGN0 ile alınmıştır. Token alias listesini mutlaka kontrol edin.
+  mode: "pkcs11-xades-bes"
+  pkcs11Library: "/usr/local/lib/libakisp11.dylib"
+  slotListIndex: 0
+  keyAlias: "XXXXXXXXXXSIGN0"
+  pinEnv: "MALI_MUHUR_PIN"
+
+client:
+  # test veya prod
+  environment: "test"
+  testEndpoint: "https://okctest.gib.gov.tr/okcesu/services/EArsivWsPort/earsiv"
+  prodEndpoint: "https://okc.gib.gov.tr/okcesu/services/EArsivWsPort/earsiv"
+  connectTimeoutSeconds: 30
+  readTimeoutSeconds: 120
