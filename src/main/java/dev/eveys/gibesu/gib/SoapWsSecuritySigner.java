@@ -1,6 +1,7 @@
 package dev.eveys.gibesu.gib;
 
 import dev.eveys.gibesu.config.AppConfig;
+import dev.eveys.gibesu.sign.Pkcs11Support;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -33,7 +34,6 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Provider;
-import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -167,8 +167,7 @@ public class SoapWsSecuritySigner {
 
     private TokenMaterial loadTokenMaterial(String pin) throws Exception {
         Provider provider = configurePkcs11Provider();
-        KeyStore keyStore = KeyStore.getInstance("PKCS11", provider);
-        keyStore.load(null, pin.toCharArray());
+        KeyStore keyStore = Pkcs11Support.loadKeyStore(provider, pin.toCharArray());
         String alias = resolveAlias(keyStore);
         Key key = keyStore.getKey(alias, null);
         if (!(key instanceof PrivateKey privateKey)) {
@@ -184,19 +183,7 @@ public class SoapWsSecuritySigner {
 
     private Provider configurePkcs11Provider() throws Exception {
         int slotListIndex = signing.slotListIndex == null ? 0 : signing.slotListIndex;
-        String providerName = "AKIS_EVEYS_WSS";
-        String cfg = "name=" + providerName + "\n" +
-                "library=" + signing.pkcs11Library + "\n" +
-                "slotListIndex=" + slotListIndex + "\n";
-        Path cfgPath = Files.createTempFile("akis-pkcs11-wss-", ".cfg");
-        Files.writeString(cfgPath, cfg);
-        Provider baseProvider = Security.getProvider("SunPKCS11");
-        if (baseProvider == null) {
-            throw new IllegalStateException("SunPKCS11 provider bulunamadi. JDK jdk.crypto.cryptoki modulunu icermeli.");
-        }
-        Provider configured = baseProvider.configure(cfgPath.toString());
-        Security.addProvider(configured);
-        return configured;
+        return Pkcs11Support.configureProvider("AKIS_EVEYS_WSS", signing.pkcs11Library, slotListIndex, "akis-pkcs11-wss-");
     }
 
     private String resolveAlias(KeyStore keyStore) throws Exception {

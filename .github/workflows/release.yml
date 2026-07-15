@@ -1,0 +1,190 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-desktop:
+    name: Build desktop (${{ matrix.os_name }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os_name: macos
+            runner: macos-latest
+            package_type: dmg
+            artifact_path: dist/desktop-macos/*.dmg
+          - os_name: windows
+            runner: windows-latest
+            package_type: app-image
+            artifact_path: dist/desktop-windows/*.zip
+          - os_name: linux
+            runner: ubuntu-latest
+            package_type: app-image
+            artifact_path: dist/desktop-linux/*.tar.gz
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Read project version
+        id: version
+        shell: bash
+        run: |
+          echo "version=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate release tag
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          expected="v${{ steps.version.outputs.version }}"
+          if [[ "${GITHUB_REF_NAME}" != "$expected" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match pom.xml version ${expected}." >&2
+            exit 1
+          fi
+
+      - name: Package desktop (macOS/Linux)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PACKAGE_TYPE: ${{ matrix.package_type }}
+        run: |
+          chmod +x scripts/package-desktop.sh
+          ./scripts/package-desktop.sh
+
+      - name: Package desktop (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PACKAGE_TYPE: ${{ matrix.package_type }}
+        run: .\scripts\package-desktop.ps1
+
+      - name: Upload desktop package
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error
+
+  build-cli:
+    name: Build CLI jar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build jar
+        run: mvn -DskipTests package
+
+      - name: Read project version
+        id: version
+        run: echo "version=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare CLI asset
+        run: |
+          mkdir -p dist/cli
+          cp "target/eveys-gib-esu-reporter-${{ steps.version.outputs.version }}.jar" \
+            "dist/cli/eveys-gib-esu-reporter-${{ steps.version.outputs.version }}-cli.jar"
+
+      - name: Upload CLI jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-jar
+          path: dist/cli/*.jar
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - build-desktop
+      - build-cli
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Read project version
+        id: version
+        run: echo "version=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)" >> "$GITHUB_OUTPUT"
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir -p release-files
+          find release-assets -maxdepth 3 -type f -print0 | while IFS= read -r -d '' file; do
+            cp "$file" release-files/
+          done
+          (cd release-files && sha256sum * > SHA256SUMS.txt)
+          find release-files -maxdepth 1 -type f -print | sort
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            tag="v${VERSION}"
+          fi
+
+          cat > RELEASE_NOTES.md <<EOF
+          Eveys GIB ESU Reporter ${VERSION}
+
+          Masaustu paketleri:
+          - macOS: DMG
+          - Windows: portable ZIP, icinde Java runtime bulunur
+          - Linux: tar.gz app-image, icinde Java runtime bulunur
+
+          CLI kullanicilari icin ayrica shaded JAR asset'i yuklenir.
+
+          Not: macOS paketi imzasizdir; Gatekeeper ilk acilista ek onay isteyebilir.
+          EOF
+
+          mapfile -t files < <(find release-files -maxdepth 1 -type f | sort)
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            gh release create "$tag" "${files[@]}" \
+              --title "Eveys GIB ESU Reporter ${VERSION}" \
+              --notes-file RELEASE_NOTES.md
+          fi

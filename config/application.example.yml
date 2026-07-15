@@ -16,11 +16,12 @@ excel:
   amountColumn: ""
 
 signing:
-  # GİB test/prod kabulü genellikle SIGN0 ile alınmıştır. Token alias listesini mutlaka kontrol edin.
+  # Bos birakilirsa token icinde tek private key alias varsa otomatik kullanilir.
+  # Birden fazla alias varsa masaustu uygulamadaki "Alias Tara" ile dogru alias'i secin.
   mode: "pkcs11-xades-bes"
   pkcs11Library: "/usr/local/lib/libakisp11.dylib"
   slotListIndex: 0
-  keyAlias: "XXXXXXXXXXSIGN0"
+  keyAlias: ""
   pinEnv: "MALI_MUHUR_PIN"
 
 client:

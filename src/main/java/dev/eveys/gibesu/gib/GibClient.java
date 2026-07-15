@@ -115,11 +115,16 @@ public class GibClient {
     }
 
     private HttpResponse<String> postSoap(String endpoint, String soapAction, String soap) throws Exception {
-        HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(Math.max(1, config.connectTimeoutSeconds)))
-                .build();
+        URI endpointUri = URI.create(endpoint);
+        HttpClient.Builder clientBuilder = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(Math.max(1, config.connectTimeoutSeconds)));
+        var sslContext = GibSslTrustStore.sslContextForEndpoint(endpointUri);
+        if (sslContext != null) {
+            clientBuilder.sslContext(sslContext);
+        }
+        HttpClient client = clientBuilder.build();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint))
+                .uri(endpointUri)
                 .timeout(Duration.ofSeconds(Math.max(1, config.readTimeoutSeconds)))
                 .header("Content-Type", "application/soap+xml; charset=utf-8")
                 .header("SOAPAction", soapAction)
@@ -165,6 +170,10 @@ public class GibClient {
             factory.setNamespaceAware(true);
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             Document doc = factory.newDocumentBuilder().parse(new InputSource(new StringReader(responseXml)));
+            String fault = extractSoapFault(doc);
+            if (!fault.isBlank()) {
+                return fault;
+            }
             NodeList responses = doc.getElementsByTagNameNS(WEB_NS, responseLocalName);
             if (responses.getLength() == 0) {
                 // Namespace farki olursa localName ile yedek ara.
@@ -185,6 +194,64 @@ public class GibClient {
         } catch (Exception e) {
             return "Response parse edilemedi: " + e.getClass().getSimpleName() + " - " + e.getMessage();
         }
+    }
+
+    private static String extractSoapFault(Document doc) {
+        NodeList faults = doc.getElementsByTagNameNS(SOAP_NS, "Fault");
+        if (faults.getLength() == 0) {
+            faults = doc.getElementsByTagName("Fault");
+        }
+        if (faults.getLength() == 0) {
+            return "";
+        }
+
+        Node fault = faults.item(0);
+        String reason = firstDescendantText(fault, "Reason", "Text");
+        String detailCode = firstDescendantText(fault, "EArsivFault", "code");
+        String detailMessage = firstDescendantText(fault, "EArsivFault", "message");
+        if (detailMessage.isBlank()) {
+            detailMessage = reason;
+        }
+        if (detailCode.isBlank()) {
+            return "SOAP Fault: " + detailMessage;
+        }
+        return "SOAP Fault " + detailCode + ": " + detailMessage;
+    }
+
+    private static String firstDescendantText(Node root, String parentLocalName, String childLocalName) {
+        if (root == null) {
+            return "";
+        }
+        for (Node n = root.getFirstChild(); n != null; n = n.getNextSibling()) {
+            if (localNameEquals(n, parentLocalName)) {
+                String directChild = firstDirectChildText(n, childLocalName);
+                if (!directChild.isBlank()) {
+                    return directChild;
+                }
+            }
+            String nested = firstDescendantText(n, parentLocalName, childLocalName);
+            if (!nested.isBlank()) {
+                return nested;
+            }
+        }
+        return "";
+    }
+
+    private static String firstDirectChildText(Node root, String childLocalName) {
+        for (Node n = root.getFirstChild(); n != null; n = n.getNextSibling()) {
+            if (localNameEquals(n, childLocalName)) {
+                return n.getTextContent() == null ? "" : n.getTextContent().trim();
+            }
+        }
+        return "";
+    }
+
+    private static boolean localNameEquals(Node node, String expected) {
+        if (node == null || expected == null) {
+            return false;
+        }
+        String localName = node.getLocalName();
+        return expected.equals(localName) || expected.equals(node.getNodeName());
     }
 
     private static String escapeXml(String value) {

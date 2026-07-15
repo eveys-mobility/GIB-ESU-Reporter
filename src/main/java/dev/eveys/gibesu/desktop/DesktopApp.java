@@ -1,6 +1,7 @@
 package dev.eveys.gibesu.desktop;
 
 import dev.eveys.gibesu.config.AppConfig;
+import dev.eveys.gibesu.gib.GibClient;
 import dev.eveys.gibesu.verify.XmlSignatureVerifier;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -38,6 +39,8 @@ public class DesktopApp extends Application {
     private static final String TEST_TRUSTSTORE = "certs/gib-test-truststore.jks";
     private static final String PROD_TRUSTSTORE = "certs/gib-prod-truststore.jks";
     private static final String TRUSTSTORE_PASSWORD = "changeit";
+    private static final int STATUS_RETRIES = 5;
+    private static final int STATUS_WAIT_SECONDS = 10;
     private static final Path INTERNAL_CONFIG = Path.of(System.getProperty("user.home"), ".eveys-gib-esu", "application.yml");
 
     private final DesktopWorkflow workflow = new DesktopWorkflow();
@@ -333,7 +336,7 @@ public class DesktopApp extends Application {
 
             String trustStore = existingTrustStore(TEST_TRUSTSTORE);
             var send = workflow.send(config, zipFile, out, false, trustStore, TRUSTSTORE_PASSWORD);
-            var status = workflow.status(config, paketId, out, false, trustStore, TRUSTSTORE_PASSWORD);
+            var status = statusWithRetry(config, paketId, out, trustStore, TRUSTSTORE_PASSWORD, "TEST");
             lastTestSuccess = isSuccess(status.returnText());
             Platform.runLater(() -> testStatusLabel.setText(lastTestSuccess ? "Başarılı: " + status.returnText() : "Kontrol gerekli: " + status.returnText()));
 
@@ -373,11 +376,27 @@ public class DesktopApp extends Application {
             Path out = Path.of(outDirField.getText().trim());
             String trustStore = existingTrustStore(PROD_TRUSTSTORE);
             var send = workflow.send(config, zipFile, out, false, trustStore, TRUSTSTORE_PASSWORD);
-            var status = workflow.status(config, paketId, out, false, trustStore, TRUSTSTORE_PASSWORD);
+            var status = statusWithRetry(config, paketId, out, trustStore, TRUSTSTORE_PASSWORD, "PROD");
             lastProdSuccess = isSuccess(status.returnText());
             Platform.runLater(() -> prodStatusLabel.setText(lastProdSuccess ? "Başarılı: " + status.returnText() : "Kontrol gerekli: " + status.returnText()));
             return "PROD send: " + send.returnText() + "\nPROD status: " + status.returnText() + "\nPaket ID: " + paketId;
         });
+    }
+
+    private GibClient.SendResult statusWithRetry(AppConfig config, String paketId, Path out, String trustStore, String trustStorePassword, String label) throws Exception {
+        GibClient.SendResult last = null;
+        for (int attempt = 1; attempt <= STATUS_RETRIES; attempt++) {
+            if (attempt > 1) {
+                log(label + " status tekrar denemesi için bekleniyor: " + STATUS_WAIT_SECONDS + " saniye");
+                Thread.sleep(STATUS_WAIT_SECONDS * 1000L);
+            }
+            log(label + " status denemesi: " + attempt + "/" + STATUS_RETRIES);
+            last = workflow.status(config, paketId, out, false, trustStore, trustStorePassword);
+            if (isSuccess(last.returnText())) {
+                return last;
+            }
+        }
+        return last;
     }
 
     private void archiveCurrentPackage() {

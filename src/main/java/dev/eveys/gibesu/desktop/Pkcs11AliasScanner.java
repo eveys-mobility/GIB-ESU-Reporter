@@ -1,10 +1,9 @@
 package dev.eveys.gibesu.desktop;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import dev.eveys.gibesu.sign.Pkcs11Support;
+
 import java.security.KeyStore;
 import java.security.Provider;
-import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -25,22 +24,8 @@ public final class Pkcs11AliasScanner {
             throw new IllegalArgumentException("Alias taramak için mali mühür PIN'i girilmelidir.");
         }
 
-        Provider baseProvider = Security.getProvider("SunPKCS11");
-        if (baseProvider == null) {
-            throw new IllegalStateException("SunPKCS11 provider bulunamadı. JDK jdk.crypto.cryptoki modülünü içermeli.");
-        }
-
-        String cfg = "name=AKIS_EVEYS_DESKTOP_SCAN\n" +
-                "library=" + pkcs11Library + "\n" +
-                "slotListIndex=" + slotListIndex + "\n";
-        Path cfgPath = Files.createTempFile("akis-pkcs11-desktop-scan-", ".cfg");
-        Files.writeString(cfgPath, cfg);
-
-        Provider provider = baseProvider.configure(cfgPath.toString());
-        Security.addProvider(provider);
-
-        KeyStore keyStore = KeyStore.getInstance("PKCS11", provider);
-        keyStore.load(null, pin);
+        Provider provider = Pkcs11Support.configureProvider("AKIS_EVEYS_DESKTOP_SCAN", pkcs11Library, slotListIndex, "akis-pkcs11-desktop-scan-");
+        KeyStore keyStore = Pkcs11Support.loadKeyStore(provider, pin);
 
         List<TokenAlias> aliases = new ArrayList<>();
         Enumeration<String> e = keyStore.aliases();

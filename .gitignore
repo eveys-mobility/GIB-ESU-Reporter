@@ -15,6 +15,7 @@ kabul-edilen-canli-paket*/
 *.zip
 *.base64.txt
 *.xml
+!pom.xml
 *.xlsx
 *.xls
 *.csv

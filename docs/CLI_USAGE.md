@@ -12,6 +12,35 @@ mvn -DskipTests package
 cp config/application.example.yml config/application.yml
 ```
 
+## Aylık Düzenli Gönderim İçin
+
+Her ay tek komutla tüm akışı çalıştırmak için:
+
+```bash
+java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+  --config config/application.yml \
+  --input "sample.xlsx" \
+  --period 2026-0 \
+  --out out \
+  --send
+```
+
+Komut sırasıyla generate, validate, sign, verify-signature, package, send ve status adımlarını çalıştırır. `MALI_MUHUR_PIN` ortam değişkeni yoksa terminalden gizli PIN ister.
+
+Status sonucu hemen `success30` dönmezse varsayılan olarak 3 kez, 10 saniye arayla tekrar denenir. Bu davranış `--status-retries` ve `--status-wait-seconds` ile ayarlanabilir.
+
+Canlı ortam için `config/application.yml` içinde `client.environment: "prod"` olmalı ve yanlışlıkla canlı gönderimi önlemek için açık onay verilmelidir:
+
+```bash
+java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+  --config config/application.yml \
+  --input "sample.xlsx" \
+  --period 2026-05 \
+  --out out-prod \
+  --send \
+  --confirm-prod "CANLI GONDER"
+```
+
 ## Generate
 
 ```bash
