@@ -1,31 +1,227 @@
 # Eveys GİB EŞÜ Reporter
 
-Eveys GİB EŞÜ Reporter, elektrikli araç şarj hizmetlerine ait aylık EŞÜ bildirimlerini Excel dosyasından okuyup GİB formatında XML üreten, mali mühür ile XAdES-BES imzalayan, ZIP paket oluşturan ve GİB servislerine SOAP WS-Security ile gönderen Java tabanlı bir uygulamadır.
+<div align="center">
 
-Proje hem terminal kullanımı için CLI komutları hem de operasyon/muhasebe personeli için masaüstü arayüz içerir.
+![Release](https://img.shields.io/github/v/release/eveys-mobility/GIB-ESU-Reporter?label=latest%20release)
+![Release workflow](https://github.com/eveys-mobility/GIB-ESU-Reporter/actions/workflows/release.yml/badge.svg)
+![Java](https://img.shields.io/badge/Java-17%2B-blue)
+![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows%20%7C%20Linux-111827)
+![License](https://img.shields.io/github/license/eveys-mobility/GIB-ESU-Reporter)
 
----
+Elektrikli araç şarj işletmecileri için Excel'den GİB EŞÜ raporu üretme, mali mühürle imzalama ve test/canlı ortama gönderme aracı.
 
-## Özellikler
+**Excel seç. Dönemi gir. Test et. Canlıya gönder.**
 
-- Excel dosyasından şarj işlem verisi okuma
-- Plaka normalizasyonu
-- Plaka bazında aylık kWh ve tutar toplama
-- GİB EŞÜ XML formatında rapor üretimi
-- Gömülü GİB EŞÜ XSD dosyaları ile doğrulama
+[Son sürümü indir](https://github.com/eveys-mobility/GIB-ESU-Reporter/releases/latest) ·
+[Masaüstü kullanım](docs/MUHASEBE_KULLANIM.md) ·
+[CLI kullanım](docs/CLI_USAGE.md) ·
+[Paketleme](docs/PACKAGING.md) ·
+[Güvenlik](docs/SECURITY.md)
+
+</div>
+
+![Eveys GİB EŞÜ Reporter masaüstü ekranı](docs/assets/desktop-app.png)
+
+## Ne İşe Yarar?
+
+Eveys GİB EŞÜ Reporter, aylık elektrikli araç şarj verilerini GİB EŞÜ bildirim formatına dönüştüren Java tabanlı bir masaüstü ve CLI uygulamasıdır.
+
+Uygulama şu akışı tek yerde toplar:
+
+```text
+Excel -> Plaka bazlı özet -> GİB EŞÜ XML -> XSD kontrol -> XAdES-BES imza -> ZIP -> GİB SOAP gönderimi -> Status kontrol
+```
+
+Özellikle muhasebe ve operasyon ekipleri için terminal gerektirmeyen, tek ekranlı bir masaüstü arayüz içerir. Geliştiriciler ve otomasyon akışları için aynı işlemler CLI komutlarıyla da çalıştırılabilir.
+
+> Bu proje GİB, KamuSM veya AKİS'in resmi ürünü değildir. GİB EŞÜ gönderim sürecini kolaylaştırmak için hazırlanmış açık kaynak bir yardımcı araçtır.
+
+## İndir
+
+En güncel paketler GitHub Releases altında yayınlanır:
+
+[Son sürüm indirme sayfası](https://github.com/eveys-mobility/GIB-ESU-Reporter/releases/latest)
+
+| Platform | Paket | Kullanım |
+| --- | --- | --- |
+| Windows | `EveysGibEsuReporter-<version>-windows.zip` | ZIP'i aç, `EveysGibEsuReporter.exe` veya uygulama kısayolunu çalıştır |
+| macOS | `EveysGibEsuReporter-<version>-macos.dmg` | DMG'yi aç, uygulamayı Applications'a taşı |
+| Linux | `EveysGibEsuReporter-<version>-linux.tar.gz` | Arşivi aç, uygulama imajındaki launcher'ı çalıştır |
+| CLI | `eveys-gib-esu-reporter-<version>-cli.jar` | Terminal/otomasyon kullanımı |
+
+Windows ve Linux paketleri kendi Java runtime'ını içerir. Son kullanıcıya Maven veya kaynak kod gerekmez.
+
+macOS paketi imzasızdır. İlk açılışta Gatekeeper ek onay isteyebilir.
+
+## Muhasebe İçin Aylık Akış
+
+1. Mali mühür USB cihazını takın.
+2. Uygulamayı açın, şirket bilgilerini ve sertifika alias'ını bir kez ayarlayın.
+3. Aylık Excel dosyasını seçin ve dönemi `YYYY-MM` formatında girin.
+4. Önce `Hazırla ve Test Et`, başarıdan sonra `Canlıya Gönder` adımını çalıştırın.
+
+Masaüstü uygulama test ortamından `success30` alınmadan canlı gönderimi açmaz. Canlı gönderimde ayrıca yazılı onay ister.
+
+Detaylı son kullanıcı rehberi:
+
+```text
+docs/MUHASEBE_KULLANIM.md
+docs/GUI_USAGE.md
+```
+
+## Öne Çıkanlar
+
+- Excel'den şarj işlem verisi okuma
+- Plaka normalizasyonu ve plaka bazlı aylık toplamlar
+- GİB EŞÜ XML üretimi
+- Proje içine gömülü GİB EŞÜ XSD dosyalarıyla doğrulama
 - Mali mühür ile XAdES-BES XML imzası
 - Yerel XML imza doğrulama
-- ZIP paket oluşturma
+- ZIP paket ve Base64 çıktı üretimi
 - SOAP WS-Security imzalı GİB gönderimi
 - Test ve canlı ortam desteği
-- Test başarılı olmadan canlı gönderimi engelleyen GUI akışı
+- Status sonucu için otomatik tekrar denemesi
 - Başarılı paketleri ve servis cevaplarını arşivleme
-- macOS, Windows ve Linux için paketlenebilir masaüstü uygulama
-- GitHub Release ile otomatik masaüstü paketleri
+- macOS, Windows ve Linux için otomatik GitHub Release paketleri
 
----
+## Gereksinimler
 
-## Klasör yapısı
+Son kullanıcı için:
+
+- Mali mühür cihazı
+- AKİS/KamuSM mali mühür sürücüsü
+- Mali mühür PIN'i
+- Aylık Excel raporu
+- Releases sayfasından indirilen masaüstü paket
+
+Geliştirme ortamı için:
+
+- Java 17 veya üzeri; JDK 17/21 önerilir
+- Maven 3.x
+- GitHub Release paketleri için GitHub Actions veya yerel `jpackage`
+
+## Excel Formatı
+
+Varsayılan olarak ilk sayfa ve ilk satır başlık satırı kabul edilir. Kolonlar boş bırakılırsa uygulama yaygın başlıkları otomatik arar:
+
+```text
+Plaka: plaka, plaka no, plate, vehicle plate, arac plaka
+kWh: kwh, enerji, tuketim, energy, toplam kwh, sarj miktari
+Tutar: tl, tutar, toplam tutar, gelir, amount, price, ucret
+```
+
+Farklı sayfa veya kolon adları için `config/application.yml` içindeki `excel` alanları düzenlenebilir.
+
+## CLI Hızlı Başlangıç
+
+Projeyi kaynak koddan çalıştırmak için:
+
+```bash
+java -version
+mvn -version
+mvn -DskipTests package
+java -jar target/eveys-gib-esu-reporter-0.1.0.jar --help
+```
+
+Örnek config hazırlayın:
+
+```bash
+cp config/application.example.yml config/application.yml
+```
+
+`config/application.yml` içinde gerçek şirket ve mali mühür bilgilerini doldurun:
+
+```text
+company.vkn
+company.unvan
+company.epdkLisansNo
+signing.pkcs11Library
+signing.keyAlias
+client.environment
+```
+
+Her ay tek komutla test ortamına gönderim:
+
+```bash
+java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+  --config config/application.yml \
+  --input "sample.xlsx" \
+  --period 2026-05 \
+  --out out \
+  --send
+```
+
+Canlı ortamda güvenlik amacıyla ek onay gerekir:
+
+```bash
+java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+  --config config/application.yml \
+  --input "sample.xlsx" \
+  --period 2026-05 \
+  --out out-prod \
+  --send \
+  --confirm-prod "CANLI GONDER"
+```
+
+Daha detaylı terminal kullanımı:
+
+```text
+docs/CLI_USAGE.md
+```
+
+## Mali Mühür ve AKİS
+
+Mali mühür imzası için AKİS PKCS#11 kütüphanesi gerekir. Masaüstü uygulama yaygın yolları otomatik dener; bulamazsa kullanıcı `akisp11.dll`, `libakisp11.dylib` veya `libakisp11.so` dosyasını bir kez seçebilir.
+
+Yaygın alias biçimleri:
+
+```text
+<VKN>SIGN0
+<VKN>SIGN1
+```
+
+Birden fazla alias varsa masaüstü uygulamadaki `Alias Tara` butonu veya CLI hata mesajındaki mevcut alias listesi kullanılabilir.
+
+PIN hiçbir zaman config dosyasına yazılmaz.
+
+## Güvenlik Modeli
+
+- PIN kaydedilmez.
+- Gerçek `config/application.yml` git'e eklenmez.
+- Excel, XML, ZIP ve SOAP request/response çıktıları git'e eklenmez.
+- GİB SSL truststore dosyaları kullanıcı klasöründe otomatik hazırlanır.
+- Test `success30` olmadan masaüstü canlı gönderimi engeller.
+- Canlı gönderim için ayrıca `CANLI GÖNDER` yazılı onayı istenir.
+
+Detay:
+
+```text
+docs/SECURITY.md
+docs/TRUSTSTORE.md
+```
+
+## GitHub Release Yayınlama
+
+Release workflow dosyası:
+
+```text
+.github/workflows/release.yml
+```
+
+Yeni sürüm yayınlamak için `pom.xml` sürümü ile tag aynı olmalıdır:
+
+```bash
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+Workflow macOS, Windows, Linux ve CLI paketlerini üretip release asset olarak yükler. Detay:
+
+```text
+docs/PACKAGING.md
+```
+
+## Proje Yapısı
 
 ```text
 src/main/java/dev/eveys/gibesu/
@@ -42,462 +238,7 @@ src/main/java/dev/eveys/gibesu/
   xml/         GİB XML üretimi ve XSD doğrulama
 ```
 
-Dokümantasyon:
-
-```text
-docs/CLI_USAGE.md
-docs/GUI_USAGE.md
-docs/MUHASEBE_KULLANIM.md
-docs/TRUSTSTORE.md
-docs/PACKAGING.md
-docs/SECURITY.md
-```
-
----
-
-## Gereksinimler
-
-Geliştirme ortamı için:
-
-- Java 17 veya üzeri; JDK 17 veya 21 LTS önerilir
-- Maven 3.x
-- JavaFX SDK, yalnızca paketleme için gerekebilir
-- AKİS/KamuSM mali mühür sürücüsü
-
-Son kullanıcı için:
-
-- Mali mühür cihazı
-- AKİS/KamuSM sürücüsü
-- Mali mühür PIN'i
-- Aylık Excel raporu
-- Paketlenmiş masaüstü uygulama
-
-Son kullanıcıya Maven, kaynak kod veya terminal komutu gerekmez. Nihai kullanım için GitHub Releases üzerinden macOS `.dmg`, Windows `.zip` ve Linux `.tar.gz` paketleri dağıtılabilir.
-
----
-
-## Masaüstü uygulama
-
-Geliştirme sırasında arayüzü çalıştırmak için:
-
-```bash
-mvn javafx:run
-```
-
-Arayüz tek ekranda çalışır:
-
-```text
-VKN
-Unvan
-EPDK lisans no
-AKİS PKCS#11 yolu
-Sertifika alias
-PIN
-Excel dosyası
-Dönem
-Hazırla ve Test Et
-Canlıya Gönder
-```
-
-Güvenlik davranışları:
-
-- PIN kaydedilmez.
-- Test ortamında başarılı sonuç alınmadan canlı gönderim aktif olmaz.
-- Canlı gönderim için ayrıca yazılı onay istenir.
-- GİB SSL truststore dosyaları gerekiyorsa kullanıcı klasöründe otomatik hazırlanır.
-- Gömülü XSD dosyaları kullanılır; kullanıcıdan ayrıca XSD seçmesi istenmez.
-- Config dosyası kullanıcıdan seçtirilmez.
-
-Detaylı kullanım için:
-
-```text
-docs/GUI_USAGE.md
-docs/MUHASEBE_KULLANIM.md
-```
-
----
-
-## CLI kullanımı
-
-### Hızlı kurulum
-
-Projeyi ilk kez indirdikten sonra Java ve Maven'in görüldüğünü kontrol edin:
-
-```bash
-java -version
-mvn -version
-```
-
-Bağımlılıklar Maven ile otomatik indirilir ve çalıştırılabilir JAR üretilir:
-
-```bash
-mvn -DskipTests package
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar --help
-```
-
-Config dosyasını hazırlayın:
-
-```bash
-cp config/application.example.yml config/application.yml
-```
-
-`config/application.yml` içinde özellikle şu alanları gerçek değerlere göre doldurun:
-
-```text
-company.vkn
-company.unvan
-company.epdkLisansNo
-signing.pkcs11Library
-signing.keyAlias
-client.environment
-```
-
-`signing.keyAlias` boş bırakılırsa token içinde tek private key alias varsa otomatik kullanılır. Birden fazla alias varsa hata mesajında mevcut alias'lar görünür; örnek mali mühür alias biçimleri:
-
-```text
-<VKN>SIGN0
-<VKN>SIGN1
-```
-
-### Excel dosyası
-
-Varsayılan olarak ilk sayfa ve ilk satır başlık satırı kabul edilir. Farklı bir sayfa, başlık satırı veya kolon adı varsa `config/application.yml` içindeki `excel` alanları düzenlenebilir:
-
-```yaml
-excel:
-  sheetName: ""
-  headerRow: 1
-  plateColumn: ""
-  kwhColumn: ""
-  amountColumn: ""
-```
-
-Kolon adları boş bırakılırsa uygulama yaygın başlıkları otomatik arar:
-
-```text
-Plaka: plaka, plaka no, plate, vehicle plate, arac plaka
-kWh: kwh, enerji, tuketim, energy, toplam kwh, sarj miktari
-Tutar: tl, tutar, toplam tutar, gelir, amount, price, ucret
-```
-
-Rapor dönemi `YYYY-MM` formatında verilmelidir; örnek: `2026-05`.
-
-### Test ortamı akışı
-
-Canlı gönderimden önce `client.environment: "test"` ile test ortamında `success30` alınmalıdır.
-
-Her ay normal kullanım için tek komut kullanılabilir. PIN ortam değişkeninde yoksa komut terminalden gizli şekilde PIN ister:
-
-```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
-  --config config/application.yml \
-  --input "sample.xlsx" \
-  --period 2026-05 \
-  --out out \
-  --send
-```
-
-Bu komut sırasıyla XML üretir, XSD doğrular, mali mühürle imzalar, imzayı yerelde doğrular, ZIP oluşturur, GİB'e gönderir ve status sorgular.
-
-Status sonucu hemen `success30` dönmezse komut varsayılan olarak 3 kez, 10 saniye arayla tekrar dener. Gerekirse şu parametrelerle değiştirilebilir:
-
-```bash
---status-retries 5 --status-wait-seconds 20
-```
-
-Mali mühür PIN'ini terminal geçmişine yazmadan girin.
-
-macOS/zsh:
-
-```bash
-unset MALI_MUHUR_PIN
-read -rs "MALI_MUHUR_PIN?Mali mühür PIN: "
-echo
-export MALI_MUHUR_PIN
-```
-
-bash:
-
-```bash
-unset MALI_MUHUR_PIN
-read -rsp "Mali mühür PIN: " MALI_MUHUR_PIN
-echo
-export MALI_MUHUR_PIN
-```
-
-Rapor üretin. Canlıya geçmeden önce XSD doğrulama için `--validate` kullanılması önerilir:
-
-```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar generate \
-  --config config/application.yml \
-  --input sample.xlsx \
-  --period 2026-05 \
-  --out out \
-  --validate
-```
-
-XML'i mali mühür ile imzalayın:
-
-```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar sign \
-  --config config/application.yml \
-  --input out/esu-rapor-2026-05-unsigned.xml \
-  --out out
-```
-
-İmzayı yerelde doğrulayın:
-
-```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar verify-signature \
-  --input out/esu-rapor-2026-05-signed.xml
-```
-
-Paketleme:
-
-```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar package \
-  --input out/esu-rapor-2026-05-signed.xml \
-  --out out
-```
-
-Test ortamına gönderin. `status` komutunu yalnızca `send` başarılı dönerse çalıştırın:
-
-```bash
-ZIP_FILE=$(ls -t out/*.zip | head -1)
-PAKET_ID=$(basename "$ZIP_FILE" .zip)
-
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar send \
-  --config config/application.yml \
-  --zip "$ZIP_FILE" \
-  --out out
-
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar status \
-  --config config/application.yml \
-  --paket-id "$PAKET_ID" \
-  --out out
-```
-
-Başarılı test cevabı örneği:
-
-```text
-HTTP status: 200
-GIB return: success30...
-```
-
-### Canlı ortam akışı
-
-Test ortamında `success30` alınmadan canlı gönderim yapılmamalıdır.
-
-Canlı gönderim için `config/application.yml` içinde ortamı değiştirin:
-
-```yaml
-client:
-  environment: "prod"
-```
-
-Karışıklığı önlemek için canlı çıktıları ayrı klasöre üretin:
-
-Tek komutla canlı gönderim:
-
-```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
-  --config config/application.yml \
-  --input "sample.xlsx" \
-  --period 2026-05 \
-  --out out-prod \
-  --send \
-  --confirm-prod "CANLI GONDER"
-```
-
-Aynı akışı adım adım çalıştırmak isterseniz:
-
-```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar generate \
-  --config config/application.yml \
-  --input sample.xlsx \
-  --period 2026-05 \
-  --out out-prod \
-  --validate
-
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar sign \
-  --config config/application.yml \
-  --input out-prod/esu-rapor-2026-05-unsigned.xml \
-  --out out-prod
-
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar verify-signature \
-  --input out-prod/esu-rapor-2026-05-signed.xml
-
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar package \
-  --input out-prod/esu-rapor-2026-05-signed.xml \
-  --out out-prod
-
-ZIP_FILE=$(ls -t out-prod/*.zip | head -1)
-PAKET_ID=$(basename "$ZIP_FILE" .zip)
-
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar send \
-  --config config/application.yml \
-  --zip "$ZIP_FILE" \
-  --out out-prod
-
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar status \
-  --config config/application.yml \
-  --paket-id "$PAKET_ID" \
-  --out out-prod
-```
-
-Daha detaylı terminal kullanımı için:
-
-```text
-docs/CLI_USAGE.md
-```
-
----
-
-## Gömülü GİB EŞÜ dosyaları
-
-GİB EŞÜ XSD ve örnek dosyaları proje içinde yer alır:
-
-```text
-gib-esu-paket/Esu_GIB_Paket_V3/esuRapor.xsd
-gib-esu-paket/Esu_GIB_Paket_V3/esuOrnek1.xml
-gib-esu-paket/Esu_GIB_Paket_V3/esuAnlikRapor.xml
-```
-
-Aynı dosyalar Java resource olarak da bulunur:
-
-```text
-src/main/resources/gib-esu-paket/Esu_GIB_Paket_V3/
-```
-
-Bu yapı sayesinde masaüstü uygulamada kullanıcıdan harici XSD seçmesi istenmez.
-
----
-
-## AKİS PKCS#11
-
-Mali mühür imzası için AKİS PKCS#11 kütüphanesi gerekir.
-
-Uygulama yaygın yolları otomatik dener. Terminal kullanımında `signing.pkcs11Library` alanı doğru AKİS/KamuSM kütüphanesini göstermelidir.
-
-macOS:
-
-```text
-/usr/local/lib/libakisp11.dylib
-/Library/Java/Extensions/libakisp11.dylib
-```
-
-Windows:
-
-```text
-C:\Windows\System32\akisp11.dll
-C:\Windows\SysWOW64\akisp11.dll
-C:\Program Files\AKIS\akisp11.dll
-C:\Program Files (x86)\AKIS\akisp11.dll
-```
-
-Otomatik bulunamazsa arayüzden bir defa dosya seçilebilir veya `config/application.yml` içindeki `signing.pkcs11Library` alanı düzenlenebilir.
-
-Mali mühür tokenlarında birden fazla sertifika alias'ı olabilir. Terminalde yanlış alias verilirse hata mesajında mevcut alias'lar listelenir. Yaygın alias biçimi:
-
-```text
-XXXXXXXXXXSIGN0
-XXXXXXXXXXSIGN1
-```
-
----
-
-## SSL truststore
-
-Java bazı sistemlerde GİB SSL sertifika zincirini otomatik tanımayabilir. Uygulama gerekli truststore dosyalarını kullanıcı klasöründe otomatik hazırlamaya çalışır:
-
-```text
-~/.eveys-gib-esu/certs/gib-test-truststore.jks
-~/.eveys-gib-esu/certs/gib-prod-truststore.jks
-```
-
-CLI ile manuel üretim gerektiğinde:
-
-```text
-docs/TRUSTSTORE.md
-```
-
----
-
-## Paketleme
-
-GitHub Release otomasyonu:
-
-```bash
-# pom.xml version 0.1.0 ise tag v0.1.0 olmalı
-git tag -a v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
-```
-
-Workflow macOS, Windows ve Linux masaüstü paketlerini release asset olarak yükler:
-
-```text
-EveysGibEsuReporter-<version>-macos.dmg
-EveysGibEsuReporter-<version>-windows.zip
-EveysGibEsuReporter-<version>-linux.tar.gz
-eveys-gib-esu-reporter-<version>-cli.jar
-SHA256SUMS.txt
-```
-
-macOS `.dmg` üretimini yerelde denemek için:
-
-```bash
-./scripts/package-macos-dmg.sh
-```
-
-Windows jpackage app-image ZIP üretimini yerelde denemek için:
-
-```powershell
-.\scripts\package-desktop.ps1
-```
-
-Windows `.exe` installer üretimi:
-
-```powershell
-$env:JAVAFX_HOME="C:\javafx-sdk-21.0.4"
-.\scripts\package-windows-exe.ps1
-```
-
-Detay:
-
-```text
-docs/PACKAGING.md
-```
-
----
-
-## Güvenlik
-
-Repoya eklenmemesi gereken dosyalar:
-
-```text
-config/application.yml
-Excel dosyaları
-Üretilen XML dosyaları
-Üretilen ZIP paketleri
-SOAP request/response dosyaları
-Truststore dosyaları
-PEM/JKS/P12/PFX sertifika dosyaları
-Mali mühür PIN'i
-.env dosyaları
-Gerçek şirket bilgileri
-```
-
-PIN hiçbir zaman config dosyasına yazılmaz. GUI tarafında PIN sadece işlem sırasında bellekte tutulur.
-
-Detay:
-
-```text
-docs/SECURITY.md
-```
-
----
-
-## Sık karşılaşılan hatalar
+## Sık Karşılaşılan Hatalar
 
 ### `PKIX path building failed`
 
@@ -505,12 +246,7 @@ Java GİB SSL sertifikasını tanımıyordur. Uygulama resmi GİB test/prod host
 
 ### `signing.keyAlias token icinde bulunamadi`
 
-Config içindeki `signing.keyAlias` token içinde yoktur. Hata mesajındaki mevcut alias'lardan şirket mali mührüne ait olan seçilmelidir. Örnek:
-
-```yaml
-signing:
-  keyAlias: "<VKN>SIGN0"
-```
+Config içindeki `signing.keyAlias` token içinde yoktur. Hata mesajındaki mevcut alias'lardan şirket mali mührüne ait olan seçilmelidir.
 
 ### `Gönderici yetkisi yok`
 
@@ -518,35 +254,12 @@ SOAP isteği GİB'e ulaşmış ancak kullanılan sertifika/VKN için gönderici 
 
 ### `154 İmza doğrulanamadı`
 
-Kontrol edilmesi gerekenler:
-
-```text
-verify-signature sonucu başarılı mı?
-Doğru mali mühür alias'ı seçildi mi?
-ZIP içinde tek XML var mı?
-Mali mühür sertifikası geçerli mi?
-```
-
-### `XAdES.xsd file access is not allowed`
-
-XSD importları gömülü resource resolver ile çözülmelidir. Bu repo gerekli XAdES ve XMLDSig XSD dosyalarını resource olarak içerir.
-
-### `No WS-Security header found`
-
-SOAP isteği WS-Security imzasız gönderilmiş demektir. Uygulama `send` ve `status` çağrılarında SOAP WS-Security imzası ekler.
+Yerel `verify-signature` sonucu, doğru mali mühür alias'ı, ZIP içeriği ve sertifika geçerliliği kontrol edilmelidir.
 
 ### `Log4j2 could not find a logging implementation`
 
-Apache POI tarafından basılan uyarıdır. `generate` komutu raporu üretmişse engelleyici değildir.
-
----
+Apache POI tarafından basılan uyarıdır. Rapor üretimi tamamlandıysa engelleyici değildir.
 
 ## Lisans
 
-MIT License
-
----
-
-## Yapımcı
-
-Bu proje **Eveys** tarafından geliştirilmiştir.
+Bu proje `LICENSE` dosyasındaki lisans ile yayınlanır.
