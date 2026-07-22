@@ -46,7 +46,7 @@ dist/desktop-macos/EveysGibEsuReporter-<version>-macos.dmg
 
 ## Windows
 
-GitHub Release workflow'u Windows için içinde Java runtime bulunan portable ZIP üretir. Paketleme komutları, PKCS#11 mali mühür desteği için `jdk.crypto.cryptoki` modülünü etkinleştirir. Yerelde Windows üzerinde aynı jpackage app-image çıktısını almak için:
+GitHub Release workflow'u Windows için içinde Java runtime bulunan portable ZIP üretir. Paketleme komutları, PKCS#11 mali mühür desteği için `jdk.crypto.cryptoki` modülünü runtime image'a dahil eder ve launcher JVM seçeneklerinde açıkça etkinleştirir. Bu iki nokta da gereklidir; image içinde bulunması tek başına PKCS#11 KeyStore servislerinin görünmesini garanti etmez. Yerelde Windows üzerinde aynı jpackage app-image çıktısını almak için:
 
 ```powershell
 .\scripts\package-desktop.ps1

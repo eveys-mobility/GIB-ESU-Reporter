@@ -6,7 +6,7 @@
 
     <groupId>dev.eveys</groupId>
     <artifactId>eveys-gib-esu-reporter</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <name>Eveys GIB ESU Reporter</name>
     <description>Excel'den GIB ESU XML raporu ureten CLI ve JavaFX masaustu uygulamasi.</description>
 

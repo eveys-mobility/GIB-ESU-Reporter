@@ -52,6 +52,7 @@ $jpackageArgs = @(
   "--main-class", $MainClass,
   "--module-path", $JavaFxDir,
   "--add-modules", "javafx.controls,javafx.graphics,jdk.crypto.cryptoki",
+  "--java-options", "--add-modules=jdk.crypto.cryptoki",
   "--dest", $DistDir
 )
 

@@ -25,4 +25,5 @@ jpackage `
   --main-class dev.eveys.gibesu.desktop.DesktopApp `
   --module-path "$env:JAVAFX_HOME\lib" `
   --add-modules javafx.controls,javafx.graphics,jdk.crypto.cryptoki `
+  --java-options "--add-modules=jdk.crypto.cryptoki" `
   --dest dist\windows
