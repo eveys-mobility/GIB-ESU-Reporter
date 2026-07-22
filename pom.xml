@@ -6,7 +6,7 @@
 
     <groupId>dev.eveys</groupId>
     <artifactId>eveys-gib-esu-reporter</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <name>Eveys GIB ESU Reporter</name>
     <description>Excel'den GIB ESU XML raporu ureten CLI ve JavaFX masaustu uygulamasi.</description>
 
@@ -20,6 +20,12 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.3</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

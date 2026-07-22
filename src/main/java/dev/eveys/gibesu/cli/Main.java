@@ -14,20 +14,43 @@ import dev.eveys.gibesu.verify.XmlSignatureVerifier;
 import org.w3c.dom.Document;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
 
 import java.io.Console;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.YearMonth;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
-@Command(name = "eveys-gib-esu-reporter", mixinStandardHelpOptions = true, version = "0.1.0",
+@Command(name = "eveys-gib-esu-reporter", mixinStandardHelpOptions = true, versionProvider = Main.AppVersionProvider.class,
         description = "Excel dosyasindan GIB EŞÜ/e-Arşiv aylik rapor XML uretir; audit, XSD dogrulama, imza ve gonderim altyapisi sunar.",
         subcommands = {Main.GenerateCommand.class, Main.MonthlyCommand.class, Main.ValidateCommand.class, Main.VerifySignatureCommand.class, Main.SignCommand.class, Main.PackageCommand.class, Main.SendCommand.class, Main.StatusCommand.class})
 public class Main implements Callable<Integer> {
+    public static class AppVersionProvider implements IVersionProvider {
+        @Override
+        public String[] getVersion() {
+            return new String[]{"eveys-gib-esu-reporter " + projectVersion()};
+        }
+
+        private String projectVersion() {
+            try (InputStream in = Main.class.getResourceAsStream("/META-INF/maven/dev.eveys/eveys-gib-esu-reporter/pom.properties")) {
+                if (in == null) {
+                    return "dev";
+                }
+                Properties properties = new Properties();
+                properties.load(in);
+                return properties.getProperty("version", "dev");
+            } catch (IOException e) {
+                return "dev";
+            }
+        }
+    }
+
     public static void main(String[] args) {
         int exitCode = new CommandLine(new Main()).execute(args);
         System.exit(exitCode);

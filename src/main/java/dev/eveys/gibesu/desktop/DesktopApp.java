@@ -275,14 +275,17 @@ public class DesktopApp extends Application {
     private void scanAliases() {
         char[] pin = pinField.getText().toCharArray();
         runTask("Mali mühür alias taranıyor", () -> {
-            List<Pkcs11AliasScanner.TokenAlias> aliases = Pkcs11AliasScanner.scan(
-                    pkcs11LibraryField.getText().trim(),
-                    parseInt(slotField.getText(), 0),
-                    pin
-            );
-            Arrays.fill(pin, '\0');
-            Platform.runLater(() -> showAliasDialog(aliases));
-            return "Alias tarama tamamlandı. Bulunan alias sayısı: " + aliases.size();
+            try {
+                List<Pkcs11AliasScanner.TokenAlias> aliases = Pkcs11AliasScanner.scan(
+                        pkcs11LibraryField.getText().trim(),
+                        parseInt(slotField.getText(), 0),
+                        pin
+                );
+                Platform.runLater(() -> showAliasDialog(aliases));
+                return "Alias tarama tamamlandı. Bulunan alias sayısı: " + aliases.size();
+            } finally {
+                Arrays.fill(pin, '\0');
+            }
         });
     }
 
@@ -300,7 +303,13 @@ public class DesktopApp extends Application {
         dialog.setHeaderText("Mali mühür sertifika alias seçimi");
         dialog.setContentText("GİB kabul testinde SIGN0 ile başarı alınmıştır:");
         Optional<Pkcs11AliasScanner.TokenAlias> selected = dialog.showAndWait();
-        selected.ifPresent(a -> aliasField.setText(a.alias()));
+        selected.ifPresent(a -> {
+            aliasField.setText(a.alias());
+            if (a.slotListIndex() >= 0) {
+                slotField.setText(String.valueOf(a.slotListIndex()));
+                saveConfigToDisk();
+            }
+        });
     }
 
     private void prepareAndTest() {
