@@ -120,7 +120,7 @@ Projeyi kaynak koddan çalıştırmak için:
 java -version
 mvn -version
 mvn -DskipTests package
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar --help
+java -jar target/eveys-gib-esu-reporter-<version>.jar --help
 ```
 
 Örnek config hazırlayın:
@@ -143,7 +143,7 @@ client.environment
 Her ay tek komutla test ortamına gönderim:
 
 ```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+java -jar target/eveys-gib-esu-reporter-<version>.jar monthly \
   --config config/application.yml \
   --input "sample.xlsx" \
   --period 2026-05 \
@@ -154,7 +154,7 @@ java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
 Canlı ortamda güvenlik amacıyla ek onay gerekir:
 
 ```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+java -jar target/eveys-gib-esu-reporter-<version>.jar monthly \
   --config config/application.yml \
   --input "sample.xlsx" \
   --period 2026-05 \
@@ -211,8 +211,8 @@ Release workflow dosyası:
 Yeni sürüm yayınlamak için `pom.xml` sürümü ile tag aynı olmalıdır:
 
 ```bash
-git tag -a v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
+git tag -a v<version> -m "Release v<version>"
+git push origin v<version>
 ```
 
 Workflow macOS, Windows, Linux ve CLI paketlerini üretip release asset olarak yükler. Detay:

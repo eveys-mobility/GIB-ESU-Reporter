@@ -17,7 +17,7 @@ cp config/application.example.yml config/application.yml
 Her ay tek komutla tüm akışı çalıştırmak için:
 
 ```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+java -jar target/eveys-gib-esu-reporter-<version>.jar monthly \
   --config config/application.yml \
   --input "sample.xlsx" \
   --period 2026-0 \
@@ -32,7 +32,7 @@ Status sonucu hemen `success30` dönmezse varsayılan olarak 3 kez, 10 saniye ar
 Canlı ortam için `config/application.yml` içinde `client.environment: "prod"` olmalı ve yanlışlıkla canlı gönderimi önlemek için açık onay verilmelidir:
 
 ```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
+java -jar target/eveys-gib-esu-reporter-<version>.jar monthly \
   --config config/application.yml \
   --input "sample.xlsx" \
   --period 2026-05 \
@@ -44,7 +44,7 @@ java -jar target/eveys-gib-esu-reporter-0.1.0.jar monthly \
 ## Generate
 
 ```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar generate \
+java -jar target/eveys-gib-esu-reporter-<version>.jar generate \
   --config config/application.yml \
   --input sample.xlsx \
   --period 2026-05 \
@@ -58,7 +58,7 @@ read -s MALI_MUHUR_PIN
 echo
 export MALI_MUHUR_PIN
 
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar sign \
+java -jar target/eveys-gib-esu-reporter-<version>.jar sign \
   --config config/application.yml \
   --input out/esu-rapor-2026-05-unsigned.xml \
   --out out
@@ -67,14 +67,14 @@ java -jar target/eveys-gib-esu-reporter-0.1.0.jar sign \
 ## Verify
 
 ```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar verify-signature \
+java -jar target/eveys-gib-esu-reporter-<version>.jar verify-signature \
   --input out/esu-rapor-2026-05-signed.xml
 ```
 
 ## Package
 
 ```bash
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar package \
+java -jar target/eveys-gib-esu-reporter-<version>.jar package \
   --input out/esu-rapor-2026-05-signed.xml \
   --out out
 ```
@@ -85,12 +85,12 @@ java -jar target/eveys-gib-esu-reporter-0.1.0.jar package \
 ZIP_FILE=$(ls -t out/*.zip | head -1)
 PAKET_ID=$(basename "$ZIP_FILE" .zip)
 
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar send \
+java -jar target/eveys-gib-esu-reporter-<version>.jar send \
   --config config/application.yml \
   --zip "$ZIP_FILE" \
   --out out
 
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar status \
+java -jar target/eveys-gib-esu-reporter-<version>.jar status \
   --config config/application.yml \
   --paket-id "$PAKET_ID" \
   --out out

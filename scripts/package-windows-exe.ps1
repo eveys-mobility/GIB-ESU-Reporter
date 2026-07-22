@@ -5,7 +5,10 @@ if (-not $env:JAVAFX_HOME) {
 }
 
 $AppName = "EveysGibEsuReporter"
-$Version = "0.1.0"
+$Version = $env:VERSION
+if ([string]::IsNullOrWhiteSpace($Version)) {
+  $Version = (& mvn -q help:evaluate "-Dexpression=project.version" "-DforceStdout").Trim()
+}
 $Jar = "eveys-gib-esu-reporter-$Version.jar"
 
 mvn -DskipTests package
@@ -21,5 +24,5 @@ jpackage `
   --main-jar $Jar `
   --main-class dev.eveys.gibesu.desktop.DesktopApp `
   --module-path "$env:JAVAFX_HOME\lib" `
-  --add-modules javafx.controls,javafx.graphics `
+  --add-modules javafx.controls,javafx.graphics,jdk.crypto.cryptoki `
   --dest dist\windows

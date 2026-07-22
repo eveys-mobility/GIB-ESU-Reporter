@@ -13,7 +13,8 @@ if [[ $# -lt 2 ]]; then
 fi
 
 mvn -DskipTests package
-java -jar target/eveys-gib-esu-reporter-0.1.0.jar \
+VERSION="$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)"
+java -jar "target/eveys-gib-esu-reporter-${VERSION}.jar" \
   generate \
   --config config/application.yml \
   --input "$1" \

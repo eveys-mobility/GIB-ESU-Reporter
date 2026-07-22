@@ -59,7 +59,7 @@ jpackage \
   --main-jar "$JAR_NAME" \
   --main-class "$MAIN_CLASS" \
   --module-path "$JAVAFX_DIR" \
-  --add-modules javafx.controls,javafx.graphics \
+  --add-modules javafx.controls,javafx.graphics,jdk.crypto.cryptoki \
   --dest "$DIST_DIR"
 
 case "$PACKAGE_TYPE" in

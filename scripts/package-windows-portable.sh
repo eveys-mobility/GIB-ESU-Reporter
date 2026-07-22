@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
-VERSION="${VERSION:-0.1.0}"
+VERSION="${VERSION:-$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)}"
 JAVAFX_VERSION="${JAVAFX_VERSION:-21.0.4}"
 APP_NAME="EveysGibEsuReporter"
 APP_DIR_NAME="${APP_NAME}-${VERSION}-windows-portable"
@@ -51,7 +51,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-java --enable-native-access=ALL-UNNAMED --module-path "lib" --add-modules javafx.controls,javafx.graphics -cp "%APP_JAR%" dev.eveys.gibesu.desktop.DesktopApp
+java --enable-native-access=ALL-UNNAMED --module-path "lib" --add-modules javafx.controls,javafx.graphics,jdk.crypto.cryptoki -cp "%APP_JAR%" dev.eveys.gibesu.desktop.DesktopApp
 if errorlevel 1 (
   echo.
   echo Uygulama hata ile kapandi. Yukaridaki mesaji teknik ekiple paylasin.
@@ -63,7 +63,7 @@ cat > "$APP_DIR/Komut-Satiri.bat" <<EOF
 @echo off
 setlocal
 cd /d "%~dp0"
-java -jar "app\\$JAR_NAME" %*
+java --add-modules jdk.crypto.cryptoki -jar "app\\$JAR_NAME" %*
 EOF
 
 perl -0pi -e 's/\r?\n/\r\n/g' "$APP_DIR/Baslat.bat" "$APP_DIR/Komut-Satiri.bat"
