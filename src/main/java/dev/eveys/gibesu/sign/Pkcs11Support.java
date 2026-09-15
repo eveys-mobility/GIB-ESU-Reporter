@@ -9,9 +9,12 @@ import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class Pkcs11Support {
     private static final String SUN_PKCS11_PREFIX = "SunPKCS11-";
+    private static final Pattern TOKEN_ERROR_CODE = Pattern.compile("\\bCKR_[A-Z0-9_]+\\b");
 
     private Pkcs11Support() {
     }
@@ -56,8 +59,42 @@ public final class Pkcs11Support {
             keyStore.load(null, pin);
             return keyStore;
         } catch (Exception e) {
-            throw new IllegalStateException("PKCS#11 token oturumu acilamadi. PIN dogru mu, mali muhur takili mi ve slotListIndex dogru mu kontrol edin.", e);
+            throw tokenLoginFailure(e);
         }
+    }
+
+    static IllegalStateException tokenLoginFailure(Exception cause) {
+        List<String> codes = new ArrayList<>();
+        for (Throwable current = cause; current != null; current = current.getCause()) {
+            String message = current.getMessage();
+            if (message == null) continue;
+            Matcher matcher = TOKEN_ERROR_CODE.matcher(message.toUpperCase(Locale.ROOT));
+            while (matcher.find()) {
+                if (!codes.contains(matcher.group())) codes.add(matcher.group());
+            }
+        }
+
+        String message;
+        if (codes.contains("CKR_PIN_LOCKED")) {
+            message = "Mali muhur PIN'i kilitli (CKR_PIN_LOCKED). Tekrar PIN denemeyin. " +
+                    "Kamu SM Online Islemler > Mali Muhur Islemleri > PIN Olusturma/Kilit Cozme " +
+                    "adimlarini tamamlayin: https://onlineislemler.kamusm.gov.tr . " +
+                    "AKIS uzerinden PUK ile islem yapmayin.";
+        } else if (codes.contains("CKR_PIN_INCORRECT")) {
+            message = "Mali muhur PIN'i hatali (CKR_PIN_INCORRECT). Emin olmadan tekrar denemeyin; " +
+                    "hatali denemeler kartin PIN'ini kilitleyebilir.";
+        } else if (codes.contains("CKR_PIN_LEN_RANGE") || codes.contains("CKR_PIN_INVALID")) {
+            message = "Mali muhur PIN bicimi veya uzunlugu gecersiz. PIN'i kontrol edin. " + String.join(", ", codes);
+        } else if (codes.contains("CKR_PIN_EXPIRED")) {
+            message = "Mali muhur PIN'inin yenilenmesi gerekiyor (CKR_PIN_EXPIRED). " +
+                    "Kamu SM Online Islemler uzerinden PIN islemlerini tamamlayin.";
+        } else if (codes.contains("CKR_TOKEN_NOT_PRESENT") || codes.contains("CKR_DEVICE_REMOVED")) {
+            message = "Mali muhur kartina ulasilamiyor. Kart ve okuyucu baglantisini kontrol edin. " + String.join(", ", codes);
+        } else {
+            message = "PKCS#11 token oturumu acilamadi. PIN dogru mu, mali muhur takili mi ve slotListIndex dogru mu kontrol edin.";
+            if (!codes.isEmpty()) message += " Token hata kodu: " + String.join(", ", codes);
+        }
+        return new IllegalStateException(message, cause);
     }
 
     private static KeyStore newPkcs11KeyStore(Provider provider) throws Exception {

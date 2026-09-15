@@ -29,6 +29,9 @@ class Pkcs11AliasScannerTest {
                 new IllegalStateException("PKCS#11 token oturumu acilamadi",
                         new IOException("CKR_PIN_INCORRECT"))));
         assertFalse(Pkcs11AliasScanner.shouldTryOtherSlots(
+                new IllegalStateException("Mali muhur PIN'i kilitli (CKR_PIN_LOCKED)",
+                        new IOException("CKR_PIN_LOCKED"))));
+        assertFalse(Pkcs11AliasScanner.shouldTryOtherSlots(
                 new IllegalArgumentException("PIN bos olamaz")));
     }
 }

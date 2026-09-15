@@ -166,7 +166,10 @@ jobs:
             tag="v${VERSION}"
           fi
 
-          cat > RELEASE_NOTES.md <<EOF
+          notes_file="docs/releases/${tag}.md"
+          if [[ ! -f "$notes_file" ]]; then
+          notes_file="RELEASE_NOTES.md"
+          cat > "$notes_file" <<EOF
           Eveys GIB ESU Reporter ${VERSION}
 
           Masaustu paketleri:
@@ -178,6 +181,7 @@ jobs:
 
           Not: macOS paketi imzasizdir; Gatekeeper ilk acilista ek onay isteyebilir.
           EOF
+          fi
 
           mapfile -t files < <(find release-files -maxdepth 1 -type f | sort)
 
@@ -186,5 +190,5 @@ jobs:
           else
             gh release create "$tag" "${files[@]}" \
               --title "Eveys GIB ESU Reporter ${VERSION}" \
-              --notes-file RELEASE_NOTES.md
+              --notes-file "$notes_file"
           fi

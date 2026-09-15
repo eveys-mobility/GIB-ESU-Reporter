@@ -136,7 +136,7 @@ public class DesktopApp extends Application {
     private GridPane reportPane() {
         excelPathField = new TextField();
         periodField = new TextField("2026-05");
-        outDirField = new TextField("out-desktop");
+        outDirField = new TextField(DesktopPaths.defaultOutputDirectory().toString());
 
         GridPane grid = baseGrid();
         int r = 0;
@@ -322,7 +322,7 @@ public class DesktopApp extends Application {
             AppConfig config = buildConfigFromFields("test");
             saveConfigToDisk();
             Path excel = Path.of(excelPathField.getText().trim());
-            Path out = Path.of(outDirField.getText().trim());
+            Path out = outputDirectory();
             String period = periodField.getText().trim();
 
             // GİB EŞÜ XSD, <baslik> içinde ds:Signature bekler. Bu nedenle unsigned XML burada XSD ile doğrulanmaz; XSD doğrulama imzadan sonra yapılır.
@@ -355,7 +355,7 @@ public class DesktopApp extends Application {
                     + "\nYerel imza: BASARILI"
                     + "\nXSD: İmzalı XML BASARILI"
                     + "\nPaket ID: " + paketId;
-        });
+        }, testStatusLabel);
     }
 
     private void sendProdAndStatus() {
@@ -382,14 +382,14 @@ public class DesktopApp extends Application {
             applyPinForCurrentOperation();
             updateEnvironment("CANLI");
             AppConfig config = buildConfigFromFields("prod");
-            Path out = Path.of(outDirField.getText().trim());
+            Path out = outputDirectory();
             String trustStore = existingTrustStore(PROD_TRUSTSTORE);
             var send = workflow.send(config, zipFile, out, false, trustStore, TRUSTSTORE_PASSWORD);
             var status = statusWithRetry(config, paketId, out, trustStore, TRUSTSTORE_PASSWORD, "PROD");
             lastProdSuccess = isSuccess(status.returnText());
             Platform.runLater(() -> prodStatusLabel.setText(lastProdSuccess ? "Başarılı: " + status.returnText() : "Kontrol gerekli: " + status.returnText()));
             return "PROD send: " + send.returnText() + "\nPROD status: " + status.returnText() + "\nPaket ID: " + paketId;
-        });
+        }, prodStatusLabel);
     }
 
     private GibClient.SendResult statusWithRetry(AppConfig config, String paketId, Path out, String trustStore, String trustStorePassword, String label) throws Exception {
@@ -411,7 +411,7 @@ public class DesktopApp extends Application {
     private void archiveCurrentPackage() {
         runTask("Arşiv oluşturuluyor", () -> {
             if (paketId == null || paketId.isBlank()) throw new IllegalStateException("Paket ID yok.");
-            Path out = Path.of(outDirField.getText().trim());
+            Path out = outputDirectory();
             Path archive = out.resolve("arsiv").resolve(periodField.getText().trim() + "-" + paketId);
             Files.createDirectories(archive);
             copyIfExists(zipFile, archive);
@@ -425,6 +425,12 @@ public class DesktopApp extends Application {
             copyIfExists(out.resolve(paketId + "-getBatchStatus-response.xml"), archive);
             return "Arşiv klasörü hazır: " + archive.toAbsolutePath();
         });
+    }
+
+    private Path outputDirectory() {
+        Path out = DesktopPaths.resolveOutputDirectory(outDirField.getText());
+        Platform.runLater(() -> outDirField.setText(out.toString()));
+        return out;
     }
 
     private void validateRequiredInputs() {
@@ -529,6 +535,10 @@ public class DesktopApp extends Application {
     }
 
     private void runTask(String title, ThrowingSupplier<String> supplier) {
+        runTask(title, supplier, null);
+    }
+
+    private void runTask(String title, ThrowingSupplier<String> supplier, Label failureStatus) {
         log("▶ " + title + "...");
         Task<String> task = new Task<>() {
             @Override
@@ -538,6 +548,7 @@ public class DesktopApp extends Application {
         };
         task.setOnSucceeded(e -> log("✅ " + task.getValue()));
         task.setOnFailed(e -> {
+            if (failureStatus != null) failureStatus.setText("Başarısız");
             Throwable ex = task.getException();
             String message = ex == null ? "Bilinmeyen hata" : ex.getMessage();
             log("❌ " + title + " hata: " + message);

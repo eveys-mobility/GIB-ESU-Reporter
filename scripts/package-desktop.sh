@@ -39,7 +39,7 @@ INPUT_DIR="$ROOT_DIR/dist/jpackage-input-${OS_ID}"
 JAVAFX_DIR="$ROOT_DIR/target/javafx-${OS_ID}"
 
 echo "Building ${APP_NAME} ${VERSION} for ${OS_ID} (${PACKAGE_TYPE})..."
-mvn -DskipTests package
+mvn package
 
 rm -rf "$DIST_DIR" "$INPUT_DIR" "$JAVAFX_DIR"
 mkdir -p "$DIST_DIR" "$INPUT_DIR" "$JAVAFX_DIR"
@@ -52,19 +52,40 @@ mvn -q dependency:copy-dependencies \
   -DoutputDirectory="$JAVAFX_DIR"
 
 jpackage \
-  --type "$PACKAGE_TYPE" \
+  --type app-image \
   --name "$APP_NAME" \
   --app-version "$JPACKAGE_VERSION" \
   --input "$INPUT_DIR" \
   --main-jar "$JAR_NAME" \
   --main-class "$MAIN_CLASS" \
   --module-path "$JAVAFX_DIR" \
-  --add-modules javafx.controls,javafx.graphics,jdk.crypto.cryptoki \
+  --add-modules java.se,javafx.controls,javafx.graphics,jdk.crypto.cryptoki,jdk.localedata \
   --java-options "--add-modules=jdk.crypto.cryptoki" \
+  --jlink-options "--strip-debug --no-man-pages --no-header-files" \
   --dest "$DIST_DIR"
+
+if [[ "$(uname -s)" == Darwin ]]; then
+  APP_IMAGE="$DIST_DIR/${APP_NAME}.app"
+  RUNTIME_JAVA="$APP_IMAGE/Contents/runtime/Contents/Home/bin/java"
+  PACKAGED_JAR="$APP_IMAGE/Contents/app/$JAR_NAME"
+else
+  APP_IMAGE="$DIST_DIR/$APP_NAME"
+  RUNTIME_JAVA="$APP_IMAGE/lib/runtime/bin/java"
+  PACKAGED_JAR="$APP_IMAGE/lib/app/$JAR_NAME"
+fi
+CHECK_DIR="$(mktemp -d "$ROOT_DIR/target/runtime-check-${OS_ID}.XXXXXX")"
+mkdir -p "$CHECK_DIR/classes"
+javac --release 17 -cp "$INPUT_DIR/$JAR_NAME" -d "$CHECK_DIR/classes" "$ROOT_DIR/scripts/RuntimeSmokeCheck.java"
+echo "Checking the packaged runtime from / ..."
+(
+  cd /
+  "$RUNTIME_JAVA" --add-modules jdk.crypto.cryptoki -Duser.home="$CHECK_DIR/home" \
+    -cp "$CHECK_DIR/classes:$PACKAGED_JAR" dev.eveys.gibesu.desktop.RuntimeSmokeCheck "$CHECK_DIR/work"
+)
 
 case "$PACKAGE_TYPE" in
   dmg)
+    jpackage --type dmg --name "$APP_NAME" --app-image "$APP_IMAGE" --dest "$DIST_DIR"
     dmg_file="$(find "$DIST_DIR" -maxdepth 1 -type f -name "${APP_NAME}*.dmg" | head -1)"
     if [[ -z "$dmg_file" ]]; then
       echo "DMG file was not created." >&2
@@ -87,6 +108,9 @@ case "$PACKAGE_TYPE" in
     echo "$DIST_DIR/${APP_NAME}-${VERSION}-${OS_ID}.tar.gz"
     ;;
   *)
+    if [[ "$PACKAGE_TYPE" != app-image ]]; then
+      jpackage --type "$PACKAGE_TYPE" --name "$APP_NAME" --app-image "$APP_IMAGE" --dest "$DIST_DIR"
+    fi
     echo "$DIST_DIR"
     ;;
 esac

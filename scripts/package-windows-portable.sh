@@ -92,8 +92,8 @@ Calistirma:
 
 Dosyalar:
 - Ayarlar: %USERPROFILE%\.eveys-gib-esu\application.yml
-- Ciktilar: Uygulama klasoru altinda out-desktop
-- Basarili paket arsivi: out-desktop\arsiv
+- Ciktilar: %USERPROFILE%\EveysGibEsuReporter\out-desktop
+- Basarili paket arsivi: %USERPROFILE%\EveysGibEsuReporter\out-desktop\arsiv
 
 Guvenlik:
 - PIN hicbir zaman dosyaya kaydedilmez.
