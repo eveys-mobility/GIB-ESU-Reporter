@@ -34,6 +34,7 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Provider;
+import java.security.ProviderException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -76,6 +77,23 @@ public class SoapWsSecuritySigner {
             throw new IllegalArgumentException("PIN env bulunamadi: " + signing.pinEnv + ". Terminalde read -s " + signing.pinEnv + " ile girip export edin; PIN'i chate yazmayin.");
         }
 
+        try {
+            return signOnce(soapXml, pin);
+        } catch (ProviderException e) {
+            // C_SignInit hatasi ("Initialization failed"): kart oturumu dusmus olabilir.
+            // Provider'i birakip yeni oturumla yalnizca bir kez daha denenir.
+            System.out.println("PKCS#11 imza hatasi, kart oturumu yenilenip tekrar denenecek: " + Pkcs11Support.describe(e));
+            Pkcs11Support.resetProviders();
+            try {
+                return signOnce(soapXml, pin);
+            } catch (ProviderException retryFailure) {
+                throw new IllegalStateException("Mali muhur ile SOAP imzasi atilamadi: " + Pkcs11Support.describe(retryFailure)
+                        + ". Karti cikarip takin; ArkSigner gibi karti kullanan diger uygulamalari kapatip tekrar deneyin.", retryFailure);
+            }
+        }
+    }
+
+    private String signOnce(String soapXml, String pin) throws Exception {
         TokenMaterial token = loadTokenMaterial(pin);
         Document document = readXml(soapXml);
         addWsSecurityAndSign(document, token.privateKey(), token.certificate(), token.provider());

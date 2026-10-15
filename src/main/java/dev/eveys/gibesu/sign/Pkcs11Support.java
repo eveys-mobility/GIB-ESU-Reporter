@@ -3,23 +3,33 @@ package dev.eveys.gibesu.sign;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.AuthProvider;
 import java.security.KeyStore;
 import java.security.Provider;
 import java.security.Security;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Pkcs11Support {
     private static final String SUN_PKCS11_PREFIX = "SunPKCS11-";
     private static final Pattern TOKEN_ERROR_CODE = Pattern.compile("\\bCKR_[A-Z0-9_]+\\b");
+    /*
+     * Ayni kutuphane/slot icin JVM boyunca tek SunPKCS11 provider kullanilir.
+     * Her imzada yeni provider acmak (XAdES + send + 5 status = 7 provider) kartta
+     * kapanmayan oturumlar biriktiriyor ve birkac imzadan sonra C_SignInit
+     * "Initialization failed" ile dusuyordu.
+     */
+    private static final Map<String, Provider> PROVIDERS = new HashMap<>();
 
     private Pkcs11Support() {
     }
 
-    public static Provider configureProvider(String providerName, String pkcs11Library, int slotListIndex, String tempFilePrefix) throws Exception {
+    public static synchronized Provider configureProvider(String providerName, String pkcs11Library, int slotListIndex, String tempFilePrefix) throws Exception {
         if (isBlank(pkcs11Library)) {
             throw new IllegalArgumentException("signing.pkcs11Library bos. Ornek: /usr/local/lib/libakisp11.dylib");
         }
@@ -30,6 +40,12 @@ public final class Pkcs11Support {
         }
         if (!Files.isReadable(libraryPath)) {
             throw new IllegalArgumentException("PKCS#11 kutuphanesi okunamiyor: " + libraryPath);
+        }
+
+        String cacheKey = libraryPath + "#" + slotListIndex;
+        Provider cached = PROVIDERS.get(cacheKey);
+        if (cached != null) {
+            return cached;
         }
 
         Provider baseProvider = Security.getProvider("SunPKCS11");
@@ -47,10 +63,45 @@ public final class Pkcs11Support {
         try {
             Provider configured = baseProvider.configure(cfgPath.toString());
             Security.addProvider(configured);
+            PROVIDERS.put(cacheKey, configured);
             return configured;
         } catch (Exception e) {
             throw new IllegalStateException("PKCS#11 provider ayarlanamadi. Kutuphane: " + libraryPath + ", slotListIndex: " + slotListIndex + ". AKIS/KamuSM surucusunun kurulu oldugunu, mali muhurun takili oldugunu ve Java mimarisiyle kutuphane mimarisinin uyustugunu kontrol edin.", e);
+        } finally {
+            Files.deleteIfExists(cfgPath);
         }
+    }
+
+    /**
+     * Kart oturumu bozuldugunda (or. kart baska bir uygulama tarafindan resetlendiginde)
+     * onbellekteki provider'lari birakir; sonraki configureProvider cagrisi yeni oturum acar.
+     */
+    public static synchronized void resetProviders() {
+        for (Provider provider : PROVIDERS.values()) {
+            try {
+                if (provider instanceof AuthProvider authProvider) {
+                    authProvider.logout();
+                }
+            } catch (Exception ignored) {
+                // Oturum zaten dusmus olabilir; yeni provider ile devam edilir.
+            }
+            if (Security.getProvider(provider.getName()) == provider) {
+                Security.removeProvider(provider.getName());
+            }
+        }
+        PROVIDERS.clear();
+    }
+
+    /** Hata zincirindeki PKCS#11 kodlarini (CKR_...) kullaniciya gosterilecek sekilde toplar. */
+    public static String describe(Throwable error) {
+        StringBuilder text = new StringBuilder(String.valueOf(error.getMessage()));
+        for (Throwable cause = error.getCause(); cause != null && cause != cause.getCause(); cause = cause.getCause()) {
+            String message = cause.getMessage();
+            if (message != null && !text.toString().contains(message)) {
+                text.append(" <- ").append(message);
+            }
+        }
+        return text.toString();
     }
 
     public static KeyStore loadKeyStore(Provider provider, char[] pin) throws Exception {
