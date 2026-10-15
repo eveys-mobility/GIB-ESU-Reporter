@@ -35,6 +35,7 @@ import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.Provider;
+import java.security.ProviderException;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -82,6 +83,23 @@ public class Pkcs11XadesBesSigner implements Signer {
             throw new IllegalArgumentException("PIN env bulunamadi: " + signing.pinEnv + ". Terminalde read -s " + signing.pinEnv + " ile girin; PIN'i chate yazmayin.");
         }
 
+        try {
+            return signOnce(unsignedXml, signedXml, pin);
+        } catch (ProviderException e) {
+            // C_SignInit hatasi ("Initialization failed"): kart oturumu dusmus olabilir.
+            // Provider'i birakip yeni oturumla yalnizca bir kez daha denenir.
+            System.out.println("PKCS#11 imza hatasi, kart oturumu yenilenip tekrar denenecek: " + Pkcs11Support.describe(e));
+            Pkcs11Support.resetProviders();
+            try {
+                return signOnce(unsignedXml, signedXml, pin);
+            } catch (ProviderException retryFailure) {
+                throw new IllegalStateException("Mali muhur ile XML imzasi atilamadi: " + Pkcs11Support.describe(retryFailure)
+                        + ". Karti cikarip takin; ArkSigner gibi karti kullanan diger uygulamalari kapatip tekrar deneyin.", retryFailure);
+            }
+        }
+    }
+
+    private Path signOnce(Path unsignedXml, Path signedXml, String pin) throws Exception {
         Provider provider = configurePkcs11Provider();
         KeyStore keyStore = Pkcs11Support.loadKeyStore(provider, pin.toCharArray());
 

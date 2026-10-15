@@ -2,6 +2,7 @@ package dev.eveys.gibesu.desktop;
 
 import dev.eveys.gibesu.config.AppConfig;
 import dev.eveys.gibesu.gib.GibClient;
+import dev.eveys.gibesu.sign.Pkcs11Support;
 import dev.eveys.gibesu.verify.XmlSignatureVerifier;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -345,7 +346,8 @@ public class DesktopApp extends Application {
 
             String trustStore = existingTrustStore(TEST_TRUSTSTORE);
             var send = workflow.send(config, zipFile, out, false, trustStore, TRUSTSTORE_PASSWORD);
-            var status = statusWithRetry(config, paketId, out, trustStore, TRUSTSTORE_PASSWORD, "TEST");
+            log("TEST send sonucu: " + send.returnText());
+            var status = statusWithRetry(config, paketId, out, trustStore, TRUSTSTORE_PASSWORD, "TEST", statusRetriesFor(send));
             lastTestSuccess = isSuccess(status.returnText());
             Platform.runLater(() -> testStatusLabel.setText(lastTestSuccess ? "Başarılı: " + status.returnText() : "Kontrol gerekli: " + status.returnText()));
 
@@ -385,22 +387,34 @@ public class DesktopApp extends Application {
             Path out = outputDirectory();
             String trustStore = existingTrustStore(PROD_TRUSTSTORE);
             var send = workflow.send(config, zipFile, out, false, trustStore, TRUSTSTORE_PASSWORD);
-            var status = statusWithRetry(config, paketId, out, trustStore, TRUSTSTORE_PASSWORD, "PROD");
+            log("PROD send sonucu: " + send.returnText());
+            var status = statusWithRetry(config, paketId, out, trustStore, TRUSTSTORE_PASSWORD, "PROD", statusRetriesFor(send));
             lastProdSuccess = isSuccess(status.returnText());
             Platform.runLater(() -> prodStatusLabel.setText(lastProdSuccess ? "Başarılı: " + status.returnText() : "Kontrol gerekli: " + status.returnText()));
             return "PROD send: " + send.returnText() + "\nPROD status: " + status.returnText() + "\nPaket ID: " + paketId;
         }, prodStatusLabel);
     }
 
-    private GibClient.SendResult statusWithRetry(AppConfig config, String paketId, Path out, String trustStore, String trustStorePassword, String label) throws Exception {
+    /*
+     * Gönderim SOAP Fault döndüyse (ör. GİB sunucu hatası) durum yalnızca bir kez sorgulanır.
+     * "Paket daha önceden gönderilmiş" gibi fault'larda status yine success30 dönebildiği için
+     * sorgu tamamen atlanmaz.
+     */
+    private int statusRetriesFor(GibClient.SendResult send) {
+        String text = send.returnText();
+        return text != null && text.startsWith("SOAP Fault") ? 1 : STATUS_RETRIES;
+    }
+
+    private GibClient.SendResult statusWithRetry(AppConfig config, String paketId, Path out, String trustStore, String trustStorePassword, String label, int retries) throws Exception {
         GibClient.SendResult last = null;
-        for (int attempt = 1; attempt <= STATUS_RETRIES; attempt++) {
+        for (int attempt = 1; attempt <= retries; attempt++) {
             if (attempt > 1) {
                 log(label + " status tekrar denemesi için bekleniyor: " + STATUS_WAIT_SECONDS + " saniye");
                 Thread.sleep(STATUS_WAIT_SECONDS * 1000L);
             }
-            log(label + " status denemesi: " + attempt + "/" + STATUS_RETRIES);
+            log(label + " status denemesi: " + attempt + "/" + retries);
             last = workflow.status(config, paketId, out, false, trustStore, trustStorePassword);
+            log(label + " status sonucu: " + last.returnText());
             if (isSuccess(last.returnText())) {
                 return last;
             }
@@ -550,7 +564,7 @@ public class DesktopApp extends Application {
         task.setOnFailed(e -> {
             if (failureStatus != null) failureStatus.setText("Başarısız");
             Throwable ex = task.getException();
-            String message = ex == null ? "Bilinmeyen hata" : ex.getMessage();
+            String message = ex == null ? "Bilinmeyen hata" : Pkcs11Support.describe(ex);
             log("❌ " + title + " hata: " + message);
             if (ex != null) ex.printStackTrace();
             alert(Alert.AlertType.ERROR, title + " başarısız", message);
